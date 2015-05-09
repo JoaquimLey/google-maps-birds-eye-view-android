@@ -1,0 +1,12 @@
+<resources>
+
+    <string name="app_name">Birds\'s Eye View</string>
+    <string name="title_activity_maps">Map</string>
+
+    <string name="action_marker">Show/hide marker</string>
+    <string name="action_buildings">Show/hide buildings</string>
+
+    <string name="action_animation">Play/stop flyover</string>
+    <string name="action_perspective">Change perspective</string>
+
+</resources>

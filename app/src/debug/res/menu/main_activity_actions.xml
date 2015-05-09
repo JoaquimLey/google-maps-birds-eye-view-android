@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_animation"
+        android:icon="@drawable/ic_action_stop"
+        android:title="@string/action_animation"
+        app:showAsAction="ifRoom|withText"/>
+    <item
+        android:id="@+id/action_marker"
+        android:icon="@drawable/ic_action_place"
+        android:title="@string/action_marker"
+        app:showAsAction="ifRoom|withText"/>
+    <item
+        android:id="@+id/action_buildings"
+        android:icon="@drawable/ic_action_map"
+        android:title="@string/action_buildings"
+        app:showAsAction="ifRoom|withText"/>
+    <item
+        android:id="@+id/action_perspective"
+        android:icon="@drawable/ic_action_cloud"
+        android:title="@string/action_perspective"
+        app:showAsAction="ifRoom|withText"/>
+</menu>
