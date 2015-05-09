@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package com.joaquimley.birdsseyeview;
+package com.joaquimley.birdsseyeview.activities;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
-import android.animation.TypeEvaluator;
 import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.graphics.Color;
@@ -30,6 +29,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.animation.LinearInterpolator;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -41,10 +41,14 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.maps.android.SphericalUtil;
+import com.joaquimley.birdsseyeview.R;
+import com.joaquimley.birdsseyeview.helpers.GoogleMapHelper;
+import com.joaquimley.birdsseyeview.utils.LatLngEvaluator;
 
 import java.util.LinkedList;
 
 public class MapsActivity extends FragmentActivity {
+
     private static final int POLYLINE_HUE = 360; // 0-360
     private static final float POLYLINE_SATURATION = 1; // 0-1
     private static final float POLYLINE_VALUE = 1; // 0-1
@@ -57,34 +61,40 @@ public class MapsActivity extends FragmentActivity {
 
     private static final long CAMERA_HEADING_CHANGE_RATE = 5;
 
-    private static final LatLng[] ROUTE = {
-            new LatLng(37.783986, -122.408059),
-            new LatLng(37.785716, -122.40587),
-            new LatLng(37.785731, -122.406267),
-            new LatLng(37.799446, -122.408989)
-    };
-
     private GoogleMap mMap;
     private Marker mMarker;
     private AnimatorSet mAnimatorSet;
     private Menu mMenu;
+    private LatLng[] mRouteExample;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-
-        mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                .getMap();
-
-        if (mMap != null) {
-            setUpMap();
-        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        init();
+        if (GoogleMapHelper.googleServicesAvailability(this) == null) {
+            setUpMapIfNeeded();
+        }
+    }
+
+    private void init(){
+        mRouteExample = GoogleMapHelper.createMapRoute(new LatLng(37.783986, -122.408059),
+                new LatLng(37.785716, -122.40587), new LatLng(37.785731, -122.406267), new LatLng(37.799446, -122.408989));
+    }
+
+    private void setUpMapIfNeeded() {
+        if (mMap == null) {
+            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
+            if (mMap != null) {
+                setUpMap();
+            }
+        }
     }
 
     @Override
@@ -156,13 +166,13 @@ public class MapsActivity extends FragmentActivity {
         // Create a marker to represent the user on the route.
         mMarker = mMap.addMarker(new MarkerOptions()
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                .position(ROUTE[0]));
+                .position(mRouteExample[0]));
 
         // Create a polyline for the route.
         mMap.addPolyline(new PolylineOptions()
-                .add(ROUTE)
+                .add(mRouteExample)
                 .color(Color.HSVToColor(POLYLINE_ALPHA,
-                        new float[] {
+                        new float[]{
                                 POLYLINE_HUE, POLYLINE_SATURATION, POLYLINE_VALUE
                         }))
                 .width(POLYLINE_WIDTH));
@@ -183,10 +193,10 @@ public class MapsActivity extends FragmentActivity {
                 });
 
                 // Animate the camera to the beginning of the route.
-                float bearing = (float) SphericalUtil.computeHeading(ROUTE[0], ROUTE[1]);
+                float bearing = (float) SphericalUtil.computeHeading(mRouteExample[0], mRouteExample[1]);
 
                 CameraPosition pos = new CameraPosition.Builder()
-                        .target(ROUTE[0])
+                        .target(mRouteExample[0])
                         .zoom(CAMERA_OBLIQUE_ZOOM)
                         .tilt(CAMERA_OBLIQUE_TILT)
                         .bearing(bearing)
@@ -198,7 +208,7 @@ public class MapsActivity extends FragmentActivity {
 
         // Move the camera over the start position.
         CameraPosition pos = new CameraPosition.Builder()
-                .target(ROUTE[0])
+                .target(mRouteExample[0])
                 .zoom(CAMERA_OBLIQUE_ZOOM - 2)
                 .build();
 
@@ -210,16 +220,16 @@ public class MapsActivity extends FragmentActivity {
 
         // For each segment of the route, create one heading adjustment animator
         // and one segment fly-over animator.
-        for (int i = 0; i < ROUTE.length - 1; i++) {
+        for (int i = 0; i < mRouteExample.length - 1; i++) {
             // If it the first segment, ensure the camera is rotated properly.
             float h1;
             if (i == 0) {
                 h1 = mMap.getCameraPosition().bearing;
             } else {
-                h1 = (float) SphericalUtil.computeHeading(ROUTE[i - 1], ROUTE[i]);
+                h1 = (float) SphericalUtil.computeHeading(mRouteExample[i - 1], mRouteExample[i]);
             }
 
-            float h2 = (float) SphericalUtil.computeHeading(ROUTE[i], ROUTE[i + 1]);
+            float h2 = (float) SphericalUtil.computeHeading(mRouteExample[i], mRouteExample[i + 1]);
 
             ValueAnimator va = ValueAnimator.ofFloat(h1, h2);
             va.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -241,7 +251,7 @@ public class MapsActivity extends FragmentActivity {
             animators.add(va);
 
             ObjectAnimator oa = ObjectAnimator.ofObject(mMarker, "position",
-                    new LatLngEvaluator(ROUTE[i], ROUTE[i + 1]), ROUTE[i], ROUTE[i + 1]);
+                    new LatLngEvaluator(mRouteExample[i], mRouteExample[i + 1]), mRouteExample[i], mRouteExample[i + 1]);
 
             oa.setInterpolator(new LinearInterpolator());
             oa.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -253,7 +263,7 @@ public class MapsActivity extends FragmentActivity {
             });
 
             // Use the distance of the route segment for the duration.
-            double dist = SphericalUtil.computeDistanceBetween(ROUTE[i], ROUTE[i + 1]);
+            double dist = SphericalUtil.computeDistanceBetween(mRouteExample[i], mRouteExample[i + 1]);
             oa.setDuration(Math.round(dist) * 10);
 
             animators.add(oa);
@@ -266,12 +276,12 @@ public class MapsActivity extends FragmentActivity {
         mAnimatorSet.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationCancel(Animator animation) {
-                mMenu.findItem(R.id.action_animation).setIcon(R.drawable.ic_action_replay);
+                Toast.makeText(getApplicationContext(), "Animation Cancel", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                mMenu.findItem(R.id.action_animation).setIcon(R.drawable.ic_action_replay);
+                Toast.makeText(getApplicationContext(), "Welcome to the end", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -280,28 +290,9 @@ public class MapsActivity extends FragmentActivity {
 
             @Override
             public void onAnimationStart(Animator animation) {
-                mMenu.findItem(R.id.action_animation).setIcon(R.drawable.ic_action_stop);
+                Toast.makeText(getApplicationContext(), "Start", Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    class LatLngEvaluator implements TypeEvaluator<LatLng> {
-        double dlat, dlng;
-
-        public LatLngEvaluator(LatLng startValue, LatLng endValue) {
-            dlat = endValue.latitude - startValue.latitude;
-            dlng = endValue.longitude - startValue.longitude;
-        }
-
-        @Override
-        public LatLng evaluate(float fraction, LatLng startValue, LatLng endValue) {
-            double lat = dlat * fraction + startValue.latitude;
-            double lng = dlng * fraction + startValue.longitude;
-
-            return new LatLng(lat, lng);
-
-            // return SphericalUtil.interpolate(startValue, endValue, fraction);
-        }
     }
 }
 
