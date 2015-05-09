@@ -24,7 +24,7 @@ Dependencies
 References
 ----------
 [Polylines](https://developers.google.com/maps/documentation/android/shapes)
-[Getting the API Key](https://blog-emildesign.rhcloud.com/?p=403) -**Remember that windows based systems the .keystore file path must use the forward slash ( "/" ) instead the usual back slash ( "\" ) given on the example to navigate directories.**
+[Getting the API Key](https://blog-emildesign.rhcloud.com/?p=403) - **Remember that windows based systems the .keystore file path must use the forward slash ( "/" ) instead the usual back slash ( "\" ) given on the example to navigate directories.**
 
 
 Contribution guidelines
