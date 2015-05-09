@@ -1,3 +1,24 @@
+/*
+ * GNU GENERAL PUBLIC LICENSE
+ *                 Version 3, 29 June 2007
+ *
+ *     Copyright (c) 2015 Joaquim Ley <me@joaquimley.com>
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either version 2
+ *  of the License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
 package com.joaquimley.birdsseyeview.helpers;
 
 import android.animation.Animator;
@@ -6,7 +27,6 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.view.animation.LinearInterpolator;
 
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.CameraPosition;
@@ -17,23 +37,27 @@ import com.joaquimley.birdsseyeview.utils.LatLngEvaluator;
 
 import java.util.LinkedList;
 
-
+/***
+ * Helper class that handles all Google Map animation creation and customization.
+ */
 public class GoogleMapAnimationHelper {
 
     /**
-     * Animates the camera following a route given by param
+     * Create a routeAnimator set with given @params
      * WARNING: Current animation is to fast
      *
-     * @param route
-     * @param map
-     * @param cameraHeadingChangeRate
-     * @param marker
-     * @param listener
-     * @param animatorUpdateListener
-     * @return animator where the caller can animator.start()
+     * @param route                   to be followed
+     * @param map                     where the animation is going to occur
+     * @param cameraHeadingChangeRate self-explanatory
+     * @param marker                  "Avatar"/representation following the route
+     * @param animatorListener        self explanatory
+     * @param animatorUpdateListener  self explanatory
+     * @return should be .start() from the caller
      */
-    public static AnimatorSet animateRoute(LatLng[] route, final GoogleMap map, long cameraHeadingChangeRate,
-                                           Marker marker, Animator.AnimatorListener listener, ValueAnimator.AnimatorUpdateListener animatorUpdateListener) {
+    public static AnimatorSet createRouteAnimatorSet(LatLng[] route, final GoogleMap map, long cameraHeadingChangeRate,
+                                                     Marker marker, Animator.AnimatorListener animatorListener,
+                                                     ValueAnimator.AnimatorUpdateListener animatorUpdateListener) {
+        // TODO: Fix movement speed
 
         LinkedList<Animator> animators = new LinkedList<>();
         // For each segment of the route, create one heading adjustment animator
@@ -79,40 +103,40 @@ public class GoogleMapAnimationHelper {
 
         AnimatorSet animatorSet = new AnimatorSet();
         animatorSet.playSequentially(animators);
-        animatorSet.addListener(listener);
+        animatorSet.addListener(animatorListener);
         return animatorSet;
     }
 
-    public static void animateCameraToRouteBeginning(LatLng[] route, GoogleMap map,
-                                                     float cameraObliqueZoom, float cameraObliqueTilt) {
-
-        CameraPosition pos = new CameraPosition.Builder()
-                .target(route[0])
+    /**
+     * Creates a camera position with given @params
+     *
+     * @param target            of the position
+     * @param cameraObliqueZoom self explanatory
+     * @param cameraObliqueTilt self explanatory
+     * @return the CameraPosition object (already .build())
+     */
+    public static CameraPosition createCameraPosition(LatLng[] target,
+                                                      float cameraObliqueZoom, float cameraObliqueTilt) {
+        return new CameraPosition.Builder()
+                .target(target[0])
                 .zoom(cameraObliqueZoom)
                 .tilt(cameraObliqueTilt)
-                .bearing((float) SphericalUtil.computeHeading(route[0], route[1]))
+                .bearing((float) SphericalUtil.computeHeading(target[0], target[1]))
                 .build();
-        map.animateCamera(CameraUpdateFactory.newCameraPosition(pos));
-    }
-
-    public static void moveCameraToStartPosition(GoogleMap map, LatLng[] route, float cameraObliqueZoom) {
-        CameraPosition pos = new CameraPosition.Builder()
-                .target(route[0])
-                .zoom(cameraObliqueZoom - 2)
-                .build();
-
-        map.moveCamera(CameraUpdateFactory.newCameraPosition(pos));
     }
 
     /**
-     * Zoom Google Map's camera into a location
+     * Creates a camera position with given @params
+     * NOTICE: Overflow method without cameraObliqueTilt @param
      *
-     * @param map       self explanatory
-     * @param location  where the zoom will occur
-     * @param zoomValue how "much" zoom into location
+     * @param cameraObliqueZoom self explanatory
+     * @return the CameraPosition object (already .build())
      */
-    public static void zoomMapIntoLocation(GoogleMap map, LatLng location, float zoomValue) {
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(location, zoomValue);
-        map.animateCamera(cameraUpdate);
+    public static CameraPosition createCameraPosition(LatLng[] target, float cameraObliqueZoom) {
+        return new CameraPosition.Builder()
+                .target(target[0])
+                .zoom(cameraObliqueZoom)
+                .bearing((float) SphericalUtil.computeHeading(target[0], target[1]))
+                .build();
     }
 }

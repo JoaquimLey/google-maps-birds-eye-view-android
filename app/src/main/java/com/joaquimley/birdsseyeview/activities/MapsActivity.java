@@ -1,34 +1,34 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * GNU GENERAL PUBLIC LICENSE
+ *                 Version 3, 29 June 2007
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *     Copyright (c) 2015 Joaquim Ley <me@joaquimley.com>
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either version 2
+ *  of the License, or (at your option) any later version.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
 package com.joaquimley.birdsseyeview.activities;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
-import android.annotation.TargetApi;
-import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.animation.LinearInterpolator;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -38,35 +38,23 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.maps.android.SphericalUtil;
 import com.joaquimley.birdsseyeview.R;
+import com.joaquimley.birdsseyeview.helpers.GoogleMapAnimationHelper;
 import com.joaquimley.birdsseyeview.helpers.GoogleMapHelper;
-import com.joaquimley.birdsseyeview.utils.LatLngEvaluator;
+import com.joaquimley.birdsseyeview.utils.TestValues;
 
-import java.util.LinkedList;
+/**
+ * Launcher activity with Google Map fragment
+ */
 
-public class MapsActivity extends FragmentActivity {
-
-    private static final int POLYLINE_HUE = 360; // 0-360
-    private static final float POLYLINE_SATURATION = 1; // 0-1
-    private static final float POLYLINE_VALUE = 1; // 0-1
-    private static final int POLYLINE_ALPHA = 128; // 0-255
-    private static final float POLYLINE_WIDTH = 8;
-
-    private static final float CAMERA_ZOOM = 16;
-    private static final float CAMERA_OBLIQUE_ZOOM = 18;
-    private static final float CAMERA_OBLIQUE_TILT = 60;
-
-    private static final long CAMERA_HEADING_CHANGE_RATE = 5;
+public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLoadedCallback,
+        Animator.AnimatorListener, ValueAnimator.AnimatorUpdateListener {
 
     private GoogleMap mMap;
     private Marker mMarker;
     private AnimatorSet mAnimatorSet;
     private Menu mMenu;
     private LatLng[] mRouteExample;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,18 +71,126 @@ public class MapsActivity extends FragmentActivity {
         }
     }
 
-    private void init(){
+    /**
+     * Initialize UI elements, listeners etc.
+     */
+    private void init() {
         mRouteExample = GoogleMapHelper.createMapRoute(new LatLng(37.783986, -122.408059),
                 new LatLng(37.785716, -122.40587), new LatLng(37.785731, -122.406267), new LatLng(37.799446, -122.408989));
     }
 
+    /**
+     * Creates a map instance if there isn't one already created
+     */
     private void setUpMapIfNeeded() {
         if (mMap == null) {
             mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
             if (mMap != null) {
-                setUpMap();
+                setUpMap(false, false, false);
             }
         }
+    }
+
+    /**
+     * Creation and customization of the map
+     *
+     * @param isIndoorEnabled      self explanatory
+     * @param isAllGesturesEnabled self explanatory
+     * @param isZoomControlEnabled self explanatory
+     */
+    private void setUpMap(boolean isIndoorEnabled, boolean isAllGesturesEnabled, boolean isZoomControlEnabled) {
+        mMap.setIndoorEnabled(isIndoorEnabled);
+
+        // Disable gestures & controls since ideal results (pause Animator) is
+        // not easy to show in a simplified example.
+        mMap.getUiSettings().setAllGesturesEnabled(isAllGesturesEnabled);
+        mMap.getUiSettings().setZoomControlsEnabled(isZoomControlEnabled);
+
+        // Create a marker to represent the user on the route.
+        mMarker = mMap.addMarker(GoogleMapHelper.createMarker(mRouteExample[0], false,
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+
+//        mMap.addMarker(GoogleMapHelper.createMarker(mRouteExample[0], false,
+//                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+
+        // Create a polyline for the route.
+        mMap.addPolyline(GoogleMapHelper.createPolyline(mRouteExample, TestValues.POLYLINE_FINAL_COLOR,
+                TestValues.POLYLINE_WIDTH));
+
+        // Once the map is ready, zoom to the beginning of the route start the
+        // animation.
+        mMap.setOnMapLoadedCallback(this);
+
+        // Move the camera over the start position.
+        CameraPosition pos = GoogleMapAnimationHelper.createCameraPosition(mRouteExample,
+                TestValues.CAMERA_OBLIQUE_ZOOM);
+
+        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(pos));
+    }
+
+    /**
+     * When the map has finished loading all it's components (listener), calls the
+     * GoogleMapsAnimationHelper.createRouteAnimatorSet() and starts animation (via callAnimateRoute()) method
+     */
+    @Override
+    public void onMapLoaded() {
+        // Once the camera has moved to the beginning of the route,
+        // start the animation.
+        mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
+            @Override
+            public void onCameraChange(CameraPosition position) {
+                mMap.setOnCameraChangeListener(null);
+                callAnimateRoute();
+            }
+        });
+
+        // Animate the camera to the beginning of the route.
+        CameraPosition pos = GoogleMapAnimationHelper.createCameraPosition(mRouteExample,
+                TestValues.CAMERA_OBLIQUE_ZOOM, TestValues.CAMERA_OBLIQUE_TILT);
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(pos));
+    }
+
+    /**
+     * Calls the createRouteAnimatorSet, here to use the MapsActivity.this as the listener(s)
+     * starts the animation.
+     */
+    private void callAnimateRoute() {
+
+        mAnimatorSet = GoogleMapAnimationHelper.createRouteAnimatorSet(mRouteExample, mMap,
+                TestValues.CAMERA_HEADING_CHANGE_RATE, mMarker, this, this);
+
+        mAnimatorSet.start();
+    }
+
+    /**
+     * Google Map animation listener mAnimatorSet
+     */
+    @Override
+    public void onAnimationUpdate(ValueAnimator valueAnimator) {
+        mMap.moveCamera(CameraUpdateFactory
+                .newCameraPosition(CameraPosition.builder(mMap.getCameraPosition())
+                        .bearing((Float) valueAnimator.getAnimatedValue())
+                        .build()));
+    }
+
+    @Override
+    public void onAnimationCancel(Animator animation) {
+        Toast.makeText(getApplicationContext(), "Animation Cancel", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onAnimationEnd(Animator animation) {
+        Toast.makeText(getApplicationContext(), "Welcome to the end", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onAnimationRepeat(Animator animation) {
+        Toast.makeText(getApplicationContext(), "Animation Repeat", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onAnimationStart(Animator animation) {
+        Toast.makeText(getApplicationContext(), "Animation Start", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -133,16 +229,16 @@ public class MapsActivity extends FragmentActivity {
 
                 CameraPosition currentPosition = mMap.getCameraPosition();
                 CameraPosition newPosition;
-                if (currentPosition.zoom == CAMERA_OBLIQUE_ZOOM
-                        && currentPosition.tilt == CAMERA_OBLIQUE_TILT) {
+                if (currentPosition.zoom == TestValues.CAMERA_OBLIQUE_ZOOM
+                        && currentPosition.tilt == TestValues.CAMERA_OBLIQUE_TILT) {
                     newPosition = new CameraPosition.Builder()
-                            .tilt(0).zoom(CAMERA_ZOOM)
+                            .tilt(0).zoom(TestValues.CAMERA_ZOOM)
                             .bearing(currentPosition.bearing)
                             .target(currentPosition.target).build();
                 } else {
                     newPosition = new CameraPosition.Builder()
-                            .tilt(CAMERA_OBLIQUE_TILT)
-                            .zoom(CAMERA_OBLIQUE_ZOOM)
+                            .tilt(TestValues.CAMERA_OBLIQUE_TILT)
+                            .zoom(TestValues.CAMERA_OBLIQUE_ZOOM)
                             .bearing(currentPosition.bearing)
                             .target(currentPosition.target).build();
                 }
@@ -154,211 +250,4 @@ public class MapsActivity extends FragmentActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
-
-    private void setUpMap() {
-        mMap.setIndoorEnabled(false);
-
-        // Disable gestures & controls since ideal results (pause Animator) is
-        // not easy to show in a simplified example.
-        mMap.getUiSettings().setAllGesturesEnabled(false);
-        mMap.getUiSettings().setZoomControlsEnabled(false);
-
-        // Create a marker to represent the user on the route.
-        mMarker = mMap.addMarker(new MarkerOptions()
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                .position(mRouteExample[0]));
-
-        // Create a polyline for the route.
-        mMap.addPolyline(new PolylineOptions()
-                .add(mRouteExample)
-                .color(Color.HSVToColor(POLYLINE_ALPHA,
-                        new float[]{
-                                POLYLINE_HUE, POLYLINE_SATURATION, POLYLINE_VALUE
-                        }))
-                .width(POLYLINE_WIDTH));
-
-        // Once the map is ready, zoom to the beginning of the route start the
-        // animation.
-        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
-            @Override
-            public void onMapLoaded() {
-                // Once the camera has moved to the beginning of the route,
-                // start the animation.
-                mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
-                    @Override
-                    public void onCameraChange(CameraPosition position) {
-                        mMap.setOnCameraChangeListener(null);
-                        animateRoute();
-                    }
-                });
-
-                // Animate the camera to the beginning of the route.
-                float bearing = (float) SphericalUtil.computeHeading(mRouteExample[0], mRouteExample[1]);
-
-                CameraPosition pos = new CameraPosition.Builder()
-                        .target(mRouteExample[0])
-                        .zoom(CAMERA_OBLIQUE_ZOOM)
-                        .tilt(CAMERA_OBLIQUE_TILT)
-                        .bearing(bearing)
-                        .build();
-
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(pos));
-            }
-        });
-
-        // Move the camera over the start position.
-        CameraPosition pos = new CameraPosition.Builder()
-                .target(mRouteExample[0])
-                .zoom(CAMERA_OBLIQUE_ZOOM - 2)
-                .build();
-
-        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(pos));
-    }
-
-    public void animateRoute() {
-        LinkedList<Animator> animators = new LinkedList<Animator>();
-
-        // For each segment of the route, create one heading adjustment animator
-        // and one segment fly-over animator.
-        for (int i = 0; i < mRouteExample.length - 1; i++) {
-            // If it the first segment, ensure the camera is rotated properly.
-            float h1;
-            if (i == 0) {
-                h1 = mMap.getCameraPosition().bearing;
-            } else {
-                h1 = (float) SphericalUtil.computeHeading(mRouteExample[i - 1], mRouteExample[i]);
-            }
-
-            float h2 = (float) SphericalUtil.computeHeading(mRouteExample[i], mRouteExample[i + 1]);
-
-            ValueAnimator va = ValueAnimator.ofFloat(h1, h2);
-            va.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    float bearing = (Float) animation.getAnimatedValue();
-                    CameraPosition pos = CameraPosition.builder(mMap.getCameraPosition())
-                            .bearing(bearing)
-                            .build();
-                    mMap.moveCamera(CameraUpdateFactory.newCameraPosition(pos));
-                }
-            });
-
-            // Use the change in degrees of the heading for the animation
-            // duration.
-            long d = Math.round(Math.abs(h1 - h2));
-            va.setDuration(d * CAMERA_HEADING_CHANGE_RATE);
-            animators.add(va);
-
-            ObjectAnimator oa = ObjectAnimator.ofObject(mMarker, "position",
-                    new LatLngEvaluator(mRouteExample[i], mRouteExample[i + 1]), mRouteExample[i], mRouteExample[i + 1]);
-
-            oa.setInterpolator(new LinearInterpolator());
-            oa.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    LatLng target = (LatLng) animation.getAnimatedValue();
-                    mMap.moveCamera(CameraUpdateFactory.newLatLng(target));
-                }
-            });
-
-            // Use the distance of the route segment for the duration.
-            double dist = SphericalUtil.computeDistanceBetween(mRouteExample[i], mRouteExample[i + 1]);
-            oa.setDuration(Math.round(dist) * 10);
-
-            animators.add(oa);
-        }
-
-        mAnimatorSet = new AnimatorSet();
-        mAnimatorSet.playSequentially(animators);
-        mAnimatorSet.start();
-
-        mAnimatorSet.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                Toast.makeText(getApplicationContext(), "Animation Cancel", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                Toast.makeText(getApplicationContext(), "Welcome to the end", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-            }
-
-            @Override
-            public void onAnimationStart(Animator animation) {
-                Toast.makeText(getApplicationContext(), "Start", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
 }
-
-
-//package com.joaquimley.birdsseyeview;
-//
-//import android.support.v4.app.FragmentActivity;
-//import android.os.Bundle;
-//
-//import com.google.android.gms.maps.GoogleMap;
-//import com.google.android.gms.maps.SupportMapFragment;
-//import com.google.android.gms.maps.model.LatLng;
-//import com.google.android.gms.maps.model.MarkerOptions;
-//
-//public class MapsActivity extends FragmentActivity {
-//
-//    private GoogleMap mMap; // Might be null if Google Play services APK is not available.
-//
-//    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_maps);
-//        setUpMapIfNeeded();
-//    }
-//
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        setUpMapIfNeeded();
-//    }
-//
-//    /**
-//     * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
-//     * installed) and the map has not already been instantiated.. This will ensure that we only ever
-//     * call {@link #setUpMap()} once when {@link #mMap} is not null.
-//     * <p/>
-//     * If it isn't installed {@link SupportMapFragment} (and
-//     * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt for the user to
-//     * install/update the Google Play services APK on their device.
-//     * <p/>
-//     * A user can return to this FragmentActivity after following the prompt and correctly
-//     * installing/updating/enabling the Google Play services. Since the FragmentActivity may not
-//     * have been completely destroyed during this process (it is likely that it would only be
-//     * stopped or paused), {@link #onCreate(Bundle)} may not be called again so we should call this
-//     * method in {@link #onResume()} to guarantee that it will be called.
-//     */
-//    private void setUpMapIfNeeded() {
-//        // Do a null check to confirm that we have not already instantiated the map.
-//        if (mMap == null) {
-//            // Try to obtain the map from the SupportMapFragment.
-//            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-//                    .getMap();
-//            // Check if we were successful in obtaining the map.
-//            if (mMap != null) {
-//                setUpMap();
-//            }
-//        }
-//    }
-//
-//    /**
-//     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-//     * just add a marker near Africa.
-//     * <p/>
-//     * This should only be called once and when we are sure that {@link #mMap} is not null.
-//     */
-//    private void setUpMap() {
-//        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
-//    }
-//}

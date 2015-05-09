@@ -21,29 +21,23 @@
 
 package com.joaquimley.birdsseyeview.utils;
 
-import android.animation.TypeEvaluator;
-
-import com.google.android.gms.maps.model.LatLng;
+import android.graphics.Color;
 
 /**
- * Util class to calculate the camera position
+ * Simple class that holds all the values used for testing
  */
 
-public class LatLngEvaluator implements TypeEvaluator<LatLng> {
+public class TestValues {
+    public static final float POLYLINE_WIDTH = 8;
+    public static final int POLYLINE_HUE = 360; // 0-360
+    public static final float POLYLINE_SATURATION = 1; // 0-1
+    public static final float POLYLINE_VALUE = 1; // 0-1
+    public static final int POLYLINE_ALPHA = 128; // 0-255
+    public static final int POLYLINE_FINAL_COLOR = Color.HSVToColor(POLYLINE_ALPHA,
+            new float[]{POLYLINE_HUE, POLYLINE_SATURATION, POLYLINE_VALUE});
 
-    double mLatitude;
-    double mLongitude;
-
-    public LatLngEvaluator(LatLng startValue, LatLng endValue) {
-        mLatitude = endValue.latitude - startValue.latitude;
-        mLongitude = endValue.longitude - startValue.longitude;
-    }
-
-    @Override
-    public LatLng evaluate(float fraction, LatLng startValue, com.google.android.gms.maps.model.LatLng
-            endValue) {
-        double lat = mLatitude * fraction + startValue.latitude;
-        double lng = mLongitude * fraction + startValue.longitude;
-        return new LatLng(lat, lng);
-    }
+    public static final float CAMERA_ZOOM = 16;
+    public static final float CAMERA_OBLIQUE_ZOOM = 18;
+    public static final float CAMERA_OBLIQUE_TILT = 60;
+    public static final long CAMERA_HEADING_CHANGE_RATE = 5;
 }

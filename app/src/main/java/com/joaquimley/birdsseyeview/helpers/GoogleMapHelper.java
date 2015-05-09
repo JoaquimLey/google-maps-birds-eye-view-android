@@ -1,3 +1,24 @@
+/*
+ * GNU GENERAL PUBLIC LICENSE
+ *                 Version 3, 29 June 2007
+ *
+ *     Copyright (c) 2015 Joaquim Ley <me@joaquimley.com>
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either version 2
+ *  of the License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
 package com.joaquimley.birdsseyeview.helpers;
 
 import android.app.Activity;
@@ -6,14 +27,13 @@ import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 /**
- * Handles all Google Service's API events / requests
+ * Handles all Google Service's API requests & Map customization
  */
 
 public class GoogleMapHelper {
@@ -39,47 +59,71 @@ public class GoogleMapHelper {
     }
 
     /**
-     * Creates a marker on the map given by parameter and zoom into it.
+     * Creates a marker (MarkerOptions)
      *
-     * @param map                  self explanatory
-     * @param title                self explanatory
-     * @param iconBitmapDescriptor marker icon
+     * @param title                title of the marker (shown when user clicks)
+     * @param markerTarget         self explanatory
+     * @param isFlat               self explanatory
+     * @param iconBitmapDescriptor icon of the marker
+     * @return markerOptions object with given given specs
      */
-    public static void addMarker(GoogleMap map, String title, LatLng markerPosition, boolean isFlat,
-                                 BitmapDescriptor iconBitmapDescriptor) {
-        map.addMarker(new MarkerOptions().position(markerPosition)
+    public static MarkerOptions createMarker(String title, LatLng markerTarget, boolean isFlat,
+                                             BitmapDescriptor iconBitmapDescriptor) {
+
+        return new MarkerOptions().position(markerTarget)
                 .flat(isFlat)
                 .icon(iconBitmapDescriptor)
-                .title(title));
+                .title(title);
+    }
+
+    /**
+     * Overflow method without title
+     *
+     * @param markerTarget         self explanatory
+     * @param isFlat               self explanatory
+     * @param iconBitmapDescriptor icon of the marker
+     * @return markerOptions object with given given specs
+     */
+    public static MarkerOptions createMarker(LatLng markerTarget, boolean isFlat,
+                                             BitmapDescriptor iconBitmapDescriptor) {
+
+        return new MarkerOptions().position(markerTarget)
+                .flat(isFlat)
+                .icon(iconBitmapDescriptor);
     }
 
     /**
      * Creates a Polyline in the with styling options
      *
-     * @param map   on which the polyline will be created
-     * @param route the polyline is going to follow
+     * @param route the polyline is going to follow/drawn
      * @param color of the polyline
      * @param width of the polyline
+     * @return polylineOptions object
      */
-    public static void createPolyline(GoogleMap map, LatLng[] route, int color, float width) {
-        map.addPolyline(new PolylineOptions()
+    public static PolylineOptions createPolyline(LatLng[] route, int color, float width) {
+        return new PolylineOptions()
                 .add(route)
                 .color(color)
-                .width(width));
+                .width(width);
     }
 
     /**
      * Create a route object with LatLng positions given by param
      *
-     * @param rotePositions undef number of positions/markers
+     * @param rotePositions undef. number of positions/markers
      * @return the complete route
      */
     public static LatLng[] createMapRoute(LatLng... rotePositions) {
-//        LatLng[] route = new LatLng[rotePositions.length];
-//
-//        for (int i = 0; i < rotePositions.length; i++) {
-//            route[i] = rotePositions[i];
-//        }
         return rotePositions;
+    }
+
+    /**
+     * Adds the @param position to the end of the @param route
+     *
+     * @param route       self explanatory
+     * @param newPosition self explanatory
+     */
+    public static void addPositionToRoute(LatLng[] route, LatLng newPosition) {
+        route[route.length + 1] = newPosition;
     }
 }
