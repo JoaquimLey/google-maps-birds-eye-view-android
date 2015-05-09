@@ -9,7 +9,7 @@ Features
 * Google Maps API
 * Create your route with Polylines
 * Camera follows the route with smooth (GPS like) animation
-* Title angle (GPS-like)
+* Full camera costumization
 
 Technology
 ----------
@@ -23,8 +23,10 @@ Dependencies
 
 References
 ----------
-[Polylines](https://developers.google.com/maps/documentation/android/shapes)
-[Getting the API Key](https://blog-emildesign.rhcloud.com/?p=403) - **Remember that windows based systems the .keystore file path must use the forward slash ( "/" ) instead the usual back slash ( "\" ) given on the example to navigate directories.**
+* [Polylines](https://developers.google.com/maps/documentation/android/shapes)
+
+* [Getting the API Key](https://blog-emildesign.rhcloud.com/?p=403)  
+**Remember that windows based systems the .keystore file path must use the forward slash ( "/" ) instead the usual back slash ( "\" ) given on the example to navigate directories.**
 
 
 Contribution guidelines
