@@ -13,13 +13,19 @@ Features
 
 Technology
 ----------
-* [Google Maps API v2](https://developers.google.com/maps/documentation/android/) 
+* [Google Maps API v2](https://developers.google.com/maps/documentation/android/)
 
 Dependencies
----------
+------------
 * [android-maps-utils](http://googlemaps.github.io/android-maps-utils/)
 * [appcompat-v7](https://developer.android.com/tools/support-library/features.html#v7)
 * [play-services](http://developer.android.com/google/play-services/index.html)
+
+References
+----------
+[Polylines](https://developers.google.com/maps/documentation/android/shapes)
+[Getting the API Key](https://blog-emildesign.rhcloud.com/?p=403) -**Remember that windows based systems the .keystore file path must use the forward slash ( "/" ) instead the usual back slash ( "\" ) given on the example to navigate directories.**
+
 
 Contribution guidelines
 -----------------------
