@@ -86,6 +86,7 @@ public class GoogleMapAnimationHelper {
                     new LatLngEvaluator(route[i], route[i + 1]), route[i], route[i + 1]);
 
             oa.setInterpolator(new LinearInterpolator());
+            // TODO: Move this listener to calling activity
             oa.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {

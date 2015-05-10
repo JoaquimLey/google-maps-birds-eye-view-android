@@ -93,7 +93,7 @@ public class GoogleMapHelper {
     }
 
     /**
-     * Creates a Polyline in the with styling options
+     * Creates a Polyline in with styling options
      *
      * @param route the polyline is going to follow/drawn
      * @param color of the polyline
