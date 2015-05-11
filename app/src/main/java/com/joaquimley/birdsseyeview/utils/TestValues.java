@@ -40,4 +40,7 @@ public class TestValues {
     public static final float CAMERA_OBLIQUE_ZOOM = 18;
     public static final float CAMERA_OBLIQUE_TILT = 60;
     public static final long CAMERA_HEADING_CHANGE_RATE = 5;
+
+    public static final float MAXIMUM_CAMERA_ZOOM = 19;
+
 }

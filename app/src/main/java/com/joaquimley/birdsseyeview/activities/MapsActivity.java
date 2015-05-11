@@ -48,7 +48,7 @@ import com.joaquimley.birdsseyeview.utils.TestValues;
  */
 
 public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLoadedCallback,
-        Animator.AnimatorListener, ValueAnimator.AnimatorUpdateListener {
+        Animator.AnimatorListener, ValueAnimator.AnimatorUpdateListener, GoogleMap.OnMapClickListener {
 
     private GoogleMap mMap;
     private Marker mMarker;
@@ -126,6 +126,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLoa
                 TestValues.CAMERA_OBLIQUE_ZOOM);
 
         mMap.moveCamera(CameraUpdateFactory.newCameraPosition(pos));
+        mMap.setOnMapClickListener(this);
     }
 
     /**
@@ -157,8 +158,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLoa
     private void callAnimateRoute() {
 
         mAnimatorSet = GoogleMapAnimationHelper.createRouteAnimatorSet(mRouteExample, mMap,
-                TestValues.CAMERA_HEADING_CHANGE_RATE, mMarker, this, this);
-
+                TestValues.CAMERA_HEADING_CHANGE_RATE, mMarker, this, this, 0, 0);
         mAnimatorSet.start();
     }
 
@@ -232,7 +232,8 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLoa
                 if (currentPosition.zoom == TestValues.CAMERA_OBLIQUE_ZOOM
                         && currentPosition.tilt == TestValues.CAMERA_OBLIQUE_TILT) {
                     newPosition = new CameraPosition.Builder()
-                            .tilt(0).zoom(TestValues.CAMERA_ZOOM)
+                            .tilt(GoogleMapAnimationHelper.getMaximumTilt(19))
+                            .zoom(19)
                             .bearing(currentPosition.bearing)
                             .target(currentPosition.target).build();
                 } else {
@@ -249,5 +250,10 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLoa
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onMapClick(LatLng latLng) {
+        GoogleMapAnimationHelper.animateLiftOff(mMap, 2);
     }
 }
